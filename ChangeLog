@@ -1,0 +1,3 @@
+2018-06-16  Iulian Rotaru  <iulian@gnotis.ro>
+
+	* src\test\java\js\email\javamail\TestCaseEx.java: Removed.
