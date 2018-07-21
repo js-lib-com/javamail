@@ -1,8 +1,30 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>js-lib</groupId>
+	<groupId>com.js-lib</groupId>
 	<artifactId>js-javamail</artifactId>
 	<version>1.0.0</version>
+
+	<name>j(s)-lib Email</name>
+	<description>Reference implementation of j(s)-email API base on JavaMail.</description>
+	<url>https://github.com/js-lib-com/javamail</url>
+
+	<developers>
+		<developer>
+			<name>Iulian Rotaru</name>
+			<email>iulian@js-lib.com</email>
+		</developer>
+	</developers>
+
+	<licenses>
+		<license>
+			<name>The Apache License, Version 2.0</name>
+		</license>
+	</licenses>
+
+	<scm>
+		<connection>https://github.com/js-lib-com/javamail.git</connection>
+		<url>https://github.com/js-lib-com/javamail</url>
+	</scm>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -48,22 +70,36 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
 	<dependencies>
 		<dependency>
-			<groupId>js-lib</groupId>
+			<groupId>com.js-lib</groupId>
 			<artifactId>js-dom</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 		<dependency>
-			<groupId>js-lib</groupId>
+			<groupId>com.js-lib</groupId>
 			<artifactId>js-xhtml-template</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 		<dependency>
-			<groupId>js-lib</groupId>
+			<groupId>com.js-lib</groupId>
 			<artifactId>js-email-api</artifactId>
 			<version>1.0</version>
 		</dependency>
@@ -84,4 +120,15 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 </project>
