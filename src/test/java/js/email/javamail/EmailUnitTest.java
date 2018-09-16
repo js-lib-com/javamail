@@ -19,8 +19,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import js.email.Email;
-import js.email.EmailSender;
 import js.lang.Config;
+import js.template.Template;
+import js.template.TemplateEngine;
 import js.util.Base64;
 import js.util.Classes;
 import js.util.Files;
@@ -28,7 +29,7 @@ import js.util.Strings;
 
 public class EmailUnitTest
 {
-  private EmailSender sender;
+  private EmailSenderImpl sender;
 
   @Before
   public void beforeTest() throws Exception
@@ -62,24 +63,7 @@ public class EmailUnitTest
   }
 
   @Test
-  public void emailFieldsInitializationFromTemplate() throws Throwable
-  {
-    Email email = getEmail(new File("fixture/email-meta.html"));
-    assertEmail(email);
-  }
-
-  @Test
-  public void emailFieldsInitializationFromTemplateWithFullEmailAddress() throws Throwable
-  {
-    Email email = getEmail(new File("fixture/email-from.html"));
-
-    InternetAddress from = Classes.getFieldValue(email, "from");
-    assertEquals("from@server.com", from.getAddress());
-    assertEquals("Sales Deparment", from.getPersonal());
-  }
-
-  @Test
-  public void emailFieldsProgrammaticInitialization() throws Throwable
+  public void emailPropertiesSetters() throws Throwable
   {
     String template = "<!DOCTYPE HTML>" + //
         "<html>" + //
@@ -90,41 +74,10 @@ public class EmailUnitTest
         "</html>";
 
     sender.config(getConfig());
-    Email email = createEmail(template);
+    EmailImpl email = createEmail(template);
 
-    email.from("from@server.com");
-    email.to("to0@server.com", "to1@server.com");
-    email.cc("cc0@server.com", "cc1@server.com");
-    email.bcc("bcc0@server.com", "bcc1@server.com");
-    email.subject("test subject");
-    email.replyTo("replyto0@server.com", "replyto1@server.com");
-
-    assertEmail(email);
-  }
-
-  @Test
-  public void emailFieldsOverriding() throws Throwable
-  {
-    String template = "<!DOCTYPE HTML>" + //
-        "<html>" + //
-        "<head>" + //
-        "   <meta name='from' content='fake-from@server.com' />" + //
-        "   <meta name='to' content='fake-to0@server.com' />" + //
-        "   <meta name='to' content='fake-to1@server.com' />" + //
-        "   <meta name='cc' content='fake-cc0@server.com' />" + //
-        "   <meta name='cc' content='fake-cc1@server.com' />" + //
-        "   <meta name='bcc' content='fake-bcc0@server.com' />" + //
-        "   <meta name='bcc' content='fake-bcc1@server.com' />" + //
-        "   <meta name='subject' content='fake test subject' />" + //
-        "   <meta name='reply-to' content='fake-replyto0@server.com' />" + //
-        "   <meta name='reply-to' content='fake-replyto1@server.com' />" + //
-        "   <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />" + //
-        "</head>" + //
-        "<body></body>" + //
-        "</html>";
-
-    sender.config(getConfig());
-    Email email = createEmail(template);
+    email.contentType("text/html; charset=UTF-8");
+    email.envelopeFrom("from@server.com");
 
     email.from("from@server.com");
     email.to("to0@server.com", "to1@server.com");
@@ -185,30 +138,32 @@ public class EmailUnitTest
 
   }
 
-  private Email createEmail(String template) throws IOException
+  private EmailImpl createEmail(String template) throws IOException
   {
     File templateFile = new File("fixture/emails/template-file.html");
     Strings.save(template, templateFile);
-    return sender.getEmail(Files.basename(templateFile));
+    return (EmailImpl)sender.getEmail(Files.basename(templateFile));
   }
 
   @Test
   public void send() throws Throwable
   {
-    Email email = getEmail(new File("fixture/email-inject.html"));
+    EmailImpl email = getEmail(new File("fixture/email-inject.html"));
     Person person = new Person();
     email.send(person);
 
-    String body = Classes.invoke(email, "getBody");
+    String body = email.body();
     assertNotNull(body);
     assertFalse(body.contains("<head>"));
     assertFalse(body.contains("UTF-8"));
     assertTrue(body.contains("<H1>Iulian Rotaru</H1>"));
   }
 
-  private Email getEmail(File file)
+  private EmailImpl getEmail(File file) throws IOException
   {
-    return Classes.newInstance("js.email.javamail.EmailImpl", sender, file);
+    TemplateEngine templateEngine = Classes.getFieldValue(sender, "templateEngine");
+    Template template = templateEngine.getTemplate(file);
+    return new EmailImpl(sender, template);
   }
 
   private static Config getConfig()
@@ -217,7 +172,6 @@ public class EmailUnitTest
     config.setProperty("js.dev.mode", "true");
     config.setProperty("js.repository.path", "fixture/emails");
     config.setProperty("js.files.pattern", "*.html");
-    config.setProperty("js.domain.bounce", "gnotis.ro");
     config.setProperty("js.template.engine", "js.template.xhtml.XhtmlTemplateEngine");
     config.setProperty("mail.transport.protocol", "smtp");
     config.setProperty("mail.smtp.host", "bbnet.ro");
@@ -226,34 +180,34 @@ public class EmailUnitTest
     return config;
   }
 
-  private static void assertEmail(Email email) throws Throwable
+  private static void assertEmail(EmailImpl email) throws Throwable
   {
-    assertEquals("from@server.com", Classes.invoke(email, "getFrom").toString());
-    assertEquals("from@server.com", Classes.invoke(email, "getEnvelopeFrom").toString());
-    assertEquals("test subject", Classes.invoke(email, "getSubject"));
-    assertEquals("text/html; charset=UTF-8", Classes.invoke(email, "getContentType"));
+    assertEquals("from@server.com", email.from().toString());
+    assertEquals("from@server.com", email.envelopeFrom());
+    assertEquals("test subject", email.subject());
+    assertEquals("text/html; charset=UTF-8", email.contentType());
 
-    Address[] to = Classes.invoke(email, "getTo");
+    Address[] to = email.to();
     assertEquals(2, to.length);
     assertEquals("to0@server.com", to[0].toString());
     assertEquals("to1@server.com", to[1].toString());
 
-    Address[] cc = Classes.invoke(email, "getCc");
+    Address[] cc = email.cc();
     assertEquals(2, cc.length);
     assertEquals("cc0@server.com", cc[0].toString());
     assertEquals("cc1@server.com", cc[1].toString());
 
-    Address[] bcc = Classes.invoke(email, "getBcc");
+    Address[] bcc = email.bcc();
     assertEquals(2, bcc.length);
     assertEquals("bcc0@server.com", bcc[0].toString());
     assertEquals("bcc1@server.com", bcc[1].toString());
 
-    Address[] replyto = Classes.invoke(email, "getReplyTo");
+    Address[] replyto = email.replyTo();
     assertEquals(2, replyto.length);
     assertEquals("replyto0@server.com", replyto[0].toString());
     assertEquals("replyto1@server.com", replyto[1].toString());
 
-    MessageID messageID = Classes.invoke(email, "getMessageID");
+    MessageID messageID = email.messageID();
     assertTrue(Pattern.matches("<[a-z0-9]{32}@j\\(s\\)\\-lib>", messageID.getValue()));
   }
 }

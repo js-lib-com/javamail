@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.js-lib</groupId>
 	<artifactId>js-javamail</artifactId>
-	<version>1.0.0</version>
+	<version>1.1.0</version>
 
 	<name>j(s)-lib Email</name>
 	<description>Reference implementation of j(s)-email API base on JavaMail.</description>
@@ -31,6 +31,13 @@
 	</properties>
 
 	<build>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh</artifactId>
+				<version>3.0.0</version>
+			</extension>
+		</extensions>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -84,24 +91,39 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>wagon-maven-plugin</artifactId>
+				<version>2.0.0</version>
+				<executions>
+					<execution>
+						<id>upload-javadoc</id>
+						<phase>install</phase>
+						<goals>
+							<goal>upload</goal>
+						</goals>
+						<configuration>
+							<serverId>js-lib.com</serverId>
+							<fromDir>target/apidocs</fromDir>
+							<includes>*</includes>
+							<url>scp://iuli@192.168.1.10/home/iuli/upload</url>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.js-lib</groupId>
-			<artifactId>js-dom</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.js-lib</groupId>
 			<artifactId>js-xhtml-template</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.js-lib</groupId>
 			<artifactId>js-email-api</artifactId>
-			<version>1.0</version>
+			<version>2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.mail</groupId>

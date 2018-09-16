@@ -1,7 +1,6 @@
 package js.email.javamail;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
@@ -12,16 +11,11 @@ import java.util.Map;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import js.dom.Document;
-import js.dom.DocumentBuilder;
-import js.dom.EList;
-import js.dom.Element;
 import js.email.Email;
 import js.email.EmailException;
-import js.email.EmailProperties;
+import js.email.EmailModel;
 import js.lang.BugError;
 import js.template.Template;
-import js.util.Base64;
 import js.util.Params;
 import js.util.Strings;
 
@@ -35,9 +29,6 @@ final class EmailImpl implements Email
   /** Email sender instance. */
   private final EmailSenderImpl sender;
 
-  /** Source template file, merely for debugging. */
-  private final File templateFile;
-
   /** Template. */
   private final Template template;
 
@@ -47,8 +38,8 @@ final class EmailImpl implements Email
   /** Envelope from address. */
   private String envelopeFrom;
 
-  /** Body content type as described into HTML template or {@link CT#DEF_CONTENT_TYPE default value}. */
-  private final String contentType;
+  /** Body content type. */
+  private String contentType;
 
   /** Email subject. */
   private String subject;
@@ -60,7 +51,7 @@ final class EmailImpl implements Email
    * Recipients addresses hash map. Uses recipient type as map key and email addresses array as value. Recognized types
    * are: <code>to</code>, <code>cc</code> and <code>bcc</code>.
    */
-  private final Map<String, InternetAddress[]> recipients = new HashMap<String, InternetAddress[]>();
+  private final Map<String, InternetAddress[]> recipients = new HashMap<>();
 
   /** Reply to addresses. */
   private InternetAddress[] replyTo;
@@ -68,6 +59,7 @@ final class EmailImpl implements Email
   /** Email content. */
   private String body;
 
+  /** Attached files. */
   private File[] files;
 
   /**
@@ -78,97 +70,26 @@ final class EmailImpl implements Email
    * Is considered flaw in logic if given <code>document</code> is not a valid email template.
    * 
    * @param sender parent email sender,
-   * @param templateFile template file.
+   * @param template email template.
    */
-  EmailImpl(EmailSenderImpl sender, File templateFile)
+  EmailImpl(EmailSenderImpl sender, Template template)
   {
     this.sender = sender;
-    this.templateFile = templateFile;
-    this.template = sender.getTemplate(templateFile);
-    this.messageID = new MessageID(CT.DEF_MESSAGE_ID_RIGHT);
-
-    // TODO: hack solution; refine it!!!
-    // current email implementation relies on XHTML template provider and is not generic
-    // it needs to read from address and subject from template itself, beside other meta data
-    // need to find a way to move from address and subject elsewhere
-    // maybe into email sender and allow multiple senders per application
-
-    // TODO: brute force solution: load document every time new email is created
-
-    DocumentBuilder builder = sender.getDocumentBuilder();
-    Document document;
-    try {
-      document = builder.loadHTML(templateFile);
-    }
-    catch(FileNotFoundException e) {
-      throw new EmailException("Fail to load template |%s|.", templateFile);
-    }
-    document.dump();
-    Element head = document.getByTag("head");
-    assert head != null;
-
-    this.from = parseAddress(head.getByXPath("META[@name='from']"));
-    if(sender.getBounceDomain() != null) {
-      this.envelopeFrom = Strings.concat(Base64.encode(this.messageID.getValue()), "@", sender.getBounceDomain());
-    }
-
-    for(String recipient : new String[]
-    {
-        "to", "cc", "bcc"
-    }) {
-      EList addressesList = head.findByXPath("META[@name='%s']", recipient);
-      if(addressesList.isEmpty()) {
-        continue;
-      }
-      InternetAddress[] addresses = new InternetAddress[addressesList.size()];
-      this.recipients.put(recipient, addresses);
-      for(int i = 0; i < addressesList.size(); ++i) {
-        addresses[i] = parseAddress(addressesList.item(i));
-      }
-    }
-
-    EList replyToAddressesList = head.findByXPath("META[@name='reply-to']");
-    if(!replyToAddressesList.isEmpty()) {
-      this.replyTo = new InternetAddress[replyToAddressesList.size()];
-      for(int i = 0; i < replyToAddressesList.size(); ++i) {
-        this.replyTo[i] = parseAddress(replyToAddressesList.item(i));
-      }
-    }
-
-    Element meta = head.getByXPath("META[@name='subject']");
-    if(meta != null) {
-      this.subject = meta.getAttr("content");
-    }
-
-    meta = head.getByXPath("META[@http-equiv='Content-Type']");
-    this.contentType = meta != null ? meta.getAttr("content") : CT.DEF_CONTENT_TYPE;
+    this.template = template;
+    this.messageID = new MessageID();
   }
 
   @Override
-  public Email set(EmailProperties properties)
+  public String templateName()
   {
-    Params.notNull(properties, "Properties");
-    if(properties.hasFrom()) {
-      from(properties.getFrom());
-    }
-    if(properties.hasEnvelopeFrom()) {
-      envelopeFrom(properties.getEnvelopeFrom());
-    }
-    if(properties.hasReplyTo()) {
-      replyTo(properties.getReplyTo());
-    }
-    if(properties.hasTo()) {
-      to(properties.getTo());
-    }
-    if(properties.hasCc()) {
-      cc(properties.getCc());
-    }
-    if(properties.hasBcc()) {
-      bcc(properties.getBcc());
-    }
-    if(properties.hasSubject()) {
-      subject(properties.getSubject());
-    }
+    return template.getName();
+  }
+
+  @Override
+  public Email contentType(String contentType)
+  {
+    Params.notNullOrEmpty(contentType, "Content type");
+    this.contentType = contentType;
     return this;
   }
 
@@ -271,37 +192,80 @@ final class EmailImpl implements Email
   }
 
   @Override
-  public void send(Object... object)
+  public void send(Object... args)
   {
-    Params.LTE(object.length, 1, "Objects count");
-    body = template.serialize(object.length == 1 ? object[0] : new Object());
+    Params.LTE(args.length, 1, "Objects count");
+    Object object = args.length == 1 ? args[0] : new Object();
+
+    if(object instanceof EmailModel) {
+      final EmailModel email = (EmailModel)object;
+      try {
+        if(email.subject() != null) {
+          subject(email.subject());
+        }
+        if(email.to() != null) {
+          // EmailModel#to() returns a list of comma separated email addresses
+          recipients.put("to", InternetAddress.parse(email.to()));
+        }
+        if(email.cc() != null) {
+          // EmailModel#cc() returns a list of comma separated email addresses
+          recipients.put("cc", InternetAddress.parse(email.cc()));
+        }
+        if(email.bcc() != null) {
+          // EmailModel#bcc() returns a list of comma separated email addresses
+          recipients.put("bcc", InternetAddress.parse(email.bcc()));
+        }
+        if(email.from() != null) {
+          from(email.from());
+        }
+        if(email.envelopeFrom() != null) {
+          envelopeFrom(email.envelopeFrom());
+        }
+        if(email.replyTo() != null) {
+          // EmailModel#replyTo() returns a list of comma separated email addresses
+          replyTo = InternetAddress.parse(email.replyTo());
+        }
+        if(email.contentType() != null) {
+          contentType(email.contentType());
+        }
+      }
+      catch(AddressException e) {
+        throw new EmailException(e);
+      }
+      object = email.model();
+    }
+
+    body = template.serialize(object);
     sender.send(this);
   }
 
-  File getTemplateFile()
+  @Override
+  public String toString()
   {
-    return templateFile;
+    return template.getName();
   }
+
+  // ----------------------------------------------------------------------------------------------
+  // PACKAGE LEVEL METHODS
 
   /**
    * Return this email message ID.
    * 
    * @return message ID.
    */
-  MessageID getMessageID()
+  MessageID messageID()
   {
     return messageID;
   }
 
   /**
-   * Get email envelope from address. If this email instance envelope from address was not explicitly set uses
-   * <code>from</code> address. Returns null if <code>from</code> address is also null.
+   * Get email envelope from address.
    * 
    * @return envelope from address or null.
    */
-  String getEnvelopeFrom()
+  String envelopeFrom()
   {
-    return envelopeFrom != null ? envelopeFrom : from != null ? from.getAddress() : null;
+    return envelopeFrom;
   }
 
   /**
@@ -309,7 +273,7 @@ final class EmailImpl implements Email
    * 
    * @return sender address.
    */
-  InternetAddress getFrom()
+  InternetAddress from()
   {
     return from;
   }
@@ -319,7 +283,7 @@ final class EmailImpl implements Email
    * 
    * @return destination addresses.
    */
-  InternetAddress[] getTo()
+  InternetAddress[] to()
   {
     return recipients.get("to");
   }
@@ -329,7 +293,7 @@ final class EmailImpl implements Email
    * 
    * @return blind copy carbon addresses.
    */
-  InternetAddress[] getBcc()
+  InternetAddress[] bcc()
   {
     return recipients.get("bcc");
   }
@@ -339,9 +303,23 @@ final class EmailImpl implements Email
    * 
    * @return copy carbon addresses.
    */
-  InternetAddress[] getCc()
+  InternetAddress[] cc()
   {
     return recipients.get("cc");
+  }
+
+  /**
+   * Get address to respond to this email. If response address was not explicitly set uses <code>from</code> address.
+   * Returns null if <code>from</code> is null.
+   * 
+   * @return response address or null.
+   */
+  InternetAddress[] replyTo()
+  {
+    return replyTo != null ? replyTo : from == null ? null : new InternetAddress[]
+    {
+        from
+    };
   }
 
   /**
@@ -349,7 +327,7 @@ final class EmailImpl implements Email
    * 
    * @return email subject, possible null.
    */
-  String getSubject()
+  String subject()
   {
     return subject;
   }
@@ -360,26 +338,12 @@ final class EmailImpl implements Email
    * 
    * @return email content, possible null.
    */
-  String getBody()
+  String body()
   {
     return body;
   }
 
-  /**
-   * Get address to respond to this email. If response address was not explicitly set uses <code>from</code> address.
-   * Returns null if <code>from</code> is null.
-   * 
-   * @return response address or null.
-   */
-  InternetAddress[] getReplyTo()
-  {
-    return replyTo != null ? replyTo : from == null ? null : new InternetAddress[]
-    {
-      from
-    };
-  }
-
-  public File[] getFiles()
+  File[] files()
   {
     return files;
   }
@@ -390,17 +354,13 @@ final class EmailImpl implements Email
    * 
    * @return this email content type.
    */
-  String getContentType()
+  String contentType()
   {
-    assert contentType != null;
     return contentType;
   }
 
-  @Override
-  public String toString()
-  {
-    return Strings.toString(Strings.join(recipients.get("to")), subject);
-  }
+  // ----------------------------------------------------------------------------------------------
+  // DEBUG
 
   /** Dump this email fields and content to standard out. */
   void dump()
@@ -470,47 +430,5 @@ final class EmailImpl implements Email
       writer.flush();
     }
     catch(IOException ignore) {}
-  }
-
-  /**
-   * Parse email address from given meta element. Extract <code>content</code> attribute from meta element and create a
-   * strict email address, see {@link InternetAddress#InternetAddress(String, boolean)}. Throws logic flaw exception if
-   * given meta element has no <code>content</code> attribute or contained email address is not strict valid.
-   * <p>
-   * Give meta element parameter can be null in which case this method simply returns null.
-   * 
-   * @param meta meta element, possible null.
-   * @return newly created email address or null.
-   * @throws BugError if <code>content</code> attribute is missing from meta element or if address value is not strict
-   *           valid.
-   */
-  private static InternetAddress parseAddress(Element meta) throws BugError
-  {
-    if(meta == null) {
-      return null;
-    }
-    String emailAddress = meta.getAttr("content");
-    if(emailAddress == null) {
-      throw new BugError("Invalid meta element |%s|. Missing <content> attribute.", meta);
-    }
-    try {
-      return new InternetAddress(emailAddress, true);
-    }
-    catch(AddressException e) {
-      throw new BugError("Invalid meta element |%s|. Bad email adress |%s|.", meta, emailAddress);
-    }
-  }
-
-  // ----------------------------------------------------
-  // package level methods
-
-  boolean hasFromAddress()
-  {
-    return from != null;
-  }
-
-  void setFromAddress(InternetAddress from)
-  {
-    this.from = from;
   }
 }

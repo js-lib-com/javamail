@@ -8,7 +8,7 @@ import js.email.EmailException;
  * It is structured as bellow:
  * 
  * <pre>
- * msg-id = [CFWS] "<" id-left "@" id-right ">" [CFWS]
+ * msg-id = [CFWS] "&lt;" id-left "@" id-right "&gt;" [CFWS]
  * </pre>
  * 
  * where optional <code>CFWS</code> means comment, folding or white-space whereas, in our case, <code>id-left</code> is a random
