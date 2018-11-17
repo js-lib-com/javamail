@@ -214,7 +214,7 @@ public final class EmailSenderImpl implements EmailSender
   public void send(String from, String to, String subject, String content)
   {
     if(developmentMode) {
-      dumpEmail(from, to, subject, content);
+      dumpAdHocEmail(from, to, subject, content);
       return;
     }
 
@@ -251,16 +251,17 @@ public final class EmailSenderImpl implements EmailSender
   void send(Email emailInstance)
   {
     final EmailImpl email = (EmailImpl)emailInstance;
-    if(developmentMode) {
-      email.dump();
-      return;
-    }
-
     if(email.to() == null) {
       throw new EmailException("Invalid email |%s|. Missing <to> recipient.", email);
     }
     if(email.body() == null) {
       throw new EmailException("Invalid email |%s|. Missing <body> content.", email);
+    }
+
+    // body content type from email instance or from sender default value
+    String contentType = email.contentType();
+    if(contentType == null) {
+      contentType = this.contentType;
     }
 
     String subject = email.subject();
@@ -275,7 +276,10 @@ public final class EmailSenderImpl implements EmailSender
     if(from == null) {
       from = this.fromAddress;
       if(from == null) {
-        throw new EmailException("Invalid email |%s|. Missing <from> address.", email);
+        from = sessionFactory.getFromAddress();
+        if(from == null) {
+          throw new EmailException("Invalid email |%s|. Missing <from> address.", email);
+        }
       }
     }
 
@@ -296,6 +300,11 @@ public final class EmailSenderImpl implements EmailSender
             from
         };
       }
+    }
+
+    if(developmentMode) {
+      email.dump(from.getAddress(), envelopeFrom, contentType, subject);
+      return;
     }
 
     openTransport();
@@ -321,12 +330,6 @@ public final class EmailSenderImpl implements EmailSender
 
       // null subject is valid in which case SMTPMessage remove existing subject, if any
       message.setSubject(subject);
-
-      // body content type from email instance or from sender default value
-      String contentType = email.contentType();
-      if(contentType == null) {
-        contentType = this.contentType;
-      }
 
       if(email.files() == null) {
         message.setDataHandler(new DataHandler(email.body(), contentType));
@@ -396,7 +399,7 @@ public final class EmailSenderImpl implements EmailSender
    * @param subject email subject,
    * @param content email content.
    */
-  private static void dumpEmail(String from, String to, String subject, String content)
+  private static void dumpAdHocEmail(String from, String to, String subject, String content)
   {
     System.out.print("FROM: ");
     System.out.println(from);

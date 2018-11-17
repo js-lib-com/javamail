@@ -1,4 +1,4 @@
-package js.email.integration;
+package js.email.it;
 
 import java.io.File;
 

@@ -20,32 +20,20 @@ import js.util.Params;
 import js.util.Strings;
 
 /**
- * Implementation of {@link Email} interface.
+ * Implementation of {@link js.email.Email} interface.
  * 
  * @author Iulian Rotaru
  */
 final class EmailImpl implements Email
 {
-  /** Email sender instance. */
+  /** Email sender, parent of this email instance. */
   private final EmailSenderImpl sender;
 
-  /** Template. */
+  /** Reusable email template used to generate this email body. */
   private final Template template;
 
-  /** Message ID instance. */
+  /** Every email instance has an unique message ID. */
   private final MessageID messageID;
-
-  /** Envelope from address. */
-  private String envelopeFrom;
-
-  /** Body content type. */
-  private String contentType;
-
-  /** Email subject. */
-  private String subject;
-
-  /** Sender address. */
-  private InternetAddress from;
 
   /**
    * Recipients addresses hash map. Uses recipient type as map key and email addresses array as value. Recognized types
@@ -53,13 +41,37 @@ final class EmailImpl implements Email
    */
   private final Map<String, InternetAddress[]> recipients = new HashMap<>();
 
-  /** Reply to addresses. */
+  /** Email subject. This field is mandatory if sender has no email subject configured. */
+  private String subject;
+
+  /**
+   * Originator email address. This value is optional. If <code>from</code> is missing sender will used its configured
+   * value.
+   */
+  private InternetAddress from;
+
+  /**
+   * Envelope from address is reverse path used by remote agent to send back bounce message. This value is optional. If
+   * null, sender will use its configured value, if any, or <code>from</code> address.
+   */
+  private String envelopeFrom;
+
+  /**
+   * Optional reply to addresses where email reply should be sent. if this value is null sender will use its configured
+   * value, if any, or <code>from</code> address.
+   */
   private InternetAddress[] replyTo;
 
-  /** Email content. */
+  /** Email content generated from {@link #template}. */
   private String body;
 
-  /** Attached files. */
+  /** Optional body content type. If null sender will use its configured value. */
+  private String contentType;
+
+  /**
+   * Optional attached files, null if not set. If attached files are configured sender will create a multipart email
+   * message.
+   */
   private File[] files;
 
   /**
@@ -79,12 +91,25 @@ final class EmailImpl implements Email
     this.messageID = new MessageID();
   }
 
+  /**
+   * Return email template name.
+   * 
+   * @return email template name.
+   * @see #template
+   */
   @Override
   public String templateName()
   {
     return template.getName();
   }
 
+  /**
+   * Set this email content type.
+   * 
+   * @param contentType content type for this email instance.
+   * @return this pointer.
+   * @throws IllegalArgumentException if <code>contentType</code> argument is null or empty.
+   */
   @Override
   public Email contentType(String contentType)
   {
@@ -334,7 +359,7 @@ final class EmailImpl implements Email
 
   /**
    * Get email content or null if injection was not performed yet. Email content is initialized by
-   * {@link #inject(Object...)}; returns null if this getter is called before injection performed.
+   * {@link #send(Object...)}; returns null if this getter is called before injection performed.
    * 
    * @return email content, possible null.
    */
@@ -350,7 +375,7 @@ final class EmailImpl implements Email
 
   /**
    * Get this email content type. Content type is initialized from HTML template <code>Content-Type</code> meta. If that
-   * meta is missing uses {@link CT#DEF_CONTENT_TYPE}.
+   * meta is missing uses sender content type.
    * 
    * @return this email content type.
    */
@@ -362,11 +387,18 @@ final class EmailImpl implements Email
   // ----------------------------------------------------------------------------------------------
   // DEBUG
 
-  /** Dump this email fields and content to standard out. */
-  void dump()
+  /**
+   * Dump this email fields and content to standard out.
+   * 
+   * @param from email from address,
+   * @param envelopeFrom email envelope from address,
+   * @param contentType email body content type,
+   * @param subject email subject.
+   */
+  void dump(String from, String envelopeFrom, String contentType, String subject)
   {
     try {
-      dump(new OutputStreamWriter(System.out, "UTF-8"));
+      dump(new OutputStreamWriter(System.out, "UTF-8"), from, envelopeFrom, contentType, subject);
     }
     catch(UnsupportedEncodingException e) {
       throw new BugError("JVM with missing support for UTF-8.");
@@ -376,17 +408,21 @@ final class EmailImpl implements Email
   /**
    * Dump this email fields and content to given writer.
    * 
-   * @param writer writer to dump this email to.
+   * @param writer writer to dump this email to,
+   * @param from email from address,
+   * @param envelopeFrom email envelope from address,
+   * @param contentType email body content type,
+   * @param subject email subject.
    */
-  void dump(Writer writer)
+  void dump(Writer writer, String from, String envelopeFrom, String contentType, String subject)
   {
     try {
       writer.append("FROM: ");
-      writer.append(from != null ? from.toString() : null);
+      writer.append(from);
       writer.append("\r\n");
 
       writer.append("ENVELOPE FROM: ");
-      writer.append(envelopeFrom != null ? envelopeFrom.toString() : null);
+      writer.append(envelopeFrom);
       writer.append("\r\n");
 
       if(recipients.get("to") != null) {
@@ -407,19 +443,19 @@ final class EmailImpl implements Email
         writer.append("\r\n");
       }
 
-      writer.append("SUBJECT: ");
-      writer.append(subject);
-      writer.append("\r\n");
-
       writer.append("CONTENT TYPE: ");
       writer.append(contentType);
       writer.append("\r\n");
 
+      writer.append("SUBJECT: ");
+      writer.append(subject);
+      writer.append("\r\n");
+
       writer.append("\r\n");
       writer.append(body);
+      writer.append("\r\n");
 
       if(files != null) {
-        writer.append("\r\n");
         for(File file : files) {
           writer.append("FILE: ");
           writer.append(file.getName());

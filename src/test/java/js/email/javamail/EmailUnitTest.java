@@ -149,6 +149,8 @@ public class EmailUnitTest
   public void send() throws Throwable
   {
     EmailImpl email = getEmail(new File("fixture/email-inject.html"));
+    email.from("iuli@bbnet.ro").to("iulian@gnotis.ro").subject("test");
+    
     Person person = new Person();
     email.send(person);
 
