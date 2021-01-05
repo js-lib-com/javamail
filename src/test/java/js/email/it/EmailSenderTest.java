@@ -115,7 +115,7 @@ public class EmailSenderTest
     msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
     msg.setSubject("flux test");
     msg.setText("java email app");
-    Transport trans = ss.getTransport("smtp");
+    // Transport trans = ss.getTransport("smtp");
     Transport.send(msg);
     System.out.println("message sent");
   }
