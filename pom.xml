@@ -33,6 +33,11 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.js-lib</groupId>
+			<artifactId>js-log-api</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.js-lib</groupId>
 			<artifactId>js-xhtml-template</artifactId>
 			<version>1.0.1</version>
 		</dependency>

@@ -109,7 +109,6 @@ public final class EmailSenderImpl implements EmailSender
    * @param config configuration object.
    * @throws ConfigException if templates repository is defined but not a directory or no templates found.
    */
-  @Override
   public void config(Config config) throws Exception
   {
     log.trace("config(Config)");
