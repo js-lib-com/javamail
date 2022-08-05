@@ -1,12 +1,12 @@
-package js.email.javamail;
+package com.jslib.email;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.mail.internet.InternetAddress;
 
-import js.converter.Converter;
-import js.converter.ConverterProvider;
+import com.jslib.converter.Converter;
+import com.jslib.converter.ConverterProvider;
 
 /**
  * Provider for converters used by this email sender implementation. Converters are used to convert value types to and

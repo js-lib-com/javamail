@@ -1,4 +1,4 @@
-package js.email.it;
+package com.jslib.email.it;
 
 import java.io.File;
 
@@ -8,12 +8,12 @@ import javax.mail.internet.InternetAddress;
 import org.junit.Before;
 import org.junit.Ignore;
 
-import js.email.Email;
-import js.email.EmailException;
-import js.email.EmailSender;
-import js.email.javamail.EmailSenderImpl;
-import js.lang.BugError;
-import js.lang.Config;
+import com.jslib.api.email.Email;
+import com.jslib.api.email.EmailException;
+import com.jslib.api.email.EmailSender;
+import com.jslib.email.EmailSenderImpl;
+import com.jslib.lang.BugError;
+import com.jslib.lang.Config;
 
 @Ignore
 public class IntegrationTest

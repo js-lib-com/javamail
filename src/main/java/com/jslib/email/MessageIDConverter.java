@@ -1,7 +1,7 @@
-package js.email.javamail;
+package com.jslib.email;
 
-import js.converter.Converter;
-import js.email.EmailException;
+import com.jslib.api.email.EmailException;
+import com.jslib.converter.Converter;
 
 /**
  * RFC2822 message identifier. This is a unique message identifier that refers to a particular version of a particular message.

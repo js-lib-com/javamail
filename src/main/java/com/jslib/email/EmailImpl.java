@@ -1,4 +1,4 @@
-package js.email.javamail;
+package com.jslib.email;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,16 +11,16 @@ import java.util.Map;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import js.email.Email;
-import js.email.EmailException;
-import js.email.EmailModel;
-import js.lang.BugError;
-import js.template.Template;
-import js.util.Params;
-import js.util.Strings;
+import com.jslib.api.email.Email;
+import com.jslib.api.email.EmailException;
+import com.jslib.api.email.EmailModel;
+import com.jslib.api.template.Template;
+import com.jslib.lang.BugError;
+import com.jslib.util.Params;
+import com.jslib.util.Strings;
 
 /**
- * Implementation of {@link js.email.Email} interface.
+ * Implementation of {@link com.jslib.api.email.Email} interface.
  * 
  * @author Iulian Rotaru
  */

@@ -1,4 +1,4 @@
-package js.email.javamail;
+package com.jslib.email;
 
 import java.util.Enumeration;
 import java.util.Properties;
@@ -12,10 +12,10 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import js.email.EmailException;
-import js.lang.Config;
-import js.log.Log;
-import js.log.LogFactory;
+import com.jslib.api.email.EmailException;
+import com.jslib.api.log.Log;
+import com.jslib.api.log.LogFactory;
+import com.jslib.lang.Config;
 
 /**
  * JavaMail session factory creates and configures session instance. Factory provides an instance getter, see

@@ -1,4 +1,4 @@
-package js.email.it;
+package com.jslib.email.it;
 
 import java.util.Properties;
 import java.util.ServiceLoader;
@@ -12,8 +12,8 @@ import javax.mail.internet.MimeMessage;
 
 import org.junit.Test;
 
-import js.email.EmailSender;
-import js.lang.Config;
+import com.jslib.api.email.EmailSender;
+import com.jslib.lang.Config;
 
 public class EmailSenderTest
 {

@@ -83,4 +83,4 @@
  * @author Iulian Rotaru
  * @version 1.0
  */
-package js.email.javamail;
+package com.jslib.email;

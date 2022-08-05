@@ -1,4 +1,4 @@
-package js.email.javamail;
+package com.jslib.email;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,24 +17,23 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
+import com.jslib.api.email.Email;
+import com.jslib.api.email.EmailException;
+import com.jslib.api.email.EmailSender;
+import com.jslib.api.log.Log;
+import com.jslib.api.log.LogFactory;
+import com.jslib.api.template.Template;
+import com.jslib.api.template.TemplateEngine;
+import com.jslib.lang.Config;
+import com.jslib.lang.ConfigBuilder;
+import com.jslib.lang.ConfigException;
+import com.jslib.util.Classes;
+import com.jslib.util.Files;
+import com.jslib.util.I18nFile;
+import com.jslib.util.I18nPool;
+import com.jslib.util.I18nRepository;
+import com.jslib.util.Params;
 import com.sun.mail.smtp.SMTPMessage;
-
-import js.email.Email;
-import js.email.EmailException;
-import js.email.EmailSender;
-import js.lang.Config;
-import js.lang.ConfigBuilder;
-import js.lang.ConfigException;
-import js.log.Log;
-import js.log.LogFactory;
-import js.template.Template;
-import js.template.TemplateEngine;
-import js.util.Classes;
-import js.util.Files;
-import js.util.I18nFile;
-import js.util.I18nPool;
-import js.util.I18nRepository;
-import js.util.Params;
 
 /**
  * Email sender implementation based on Java Mail API.

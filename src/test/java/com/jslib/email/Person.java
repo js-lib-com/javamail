@@ -1,4 +1,4 @@
-package js.email.javamail;
+package com.jslib.email;
 
 import java.net.URL;
 import java.util.Date;

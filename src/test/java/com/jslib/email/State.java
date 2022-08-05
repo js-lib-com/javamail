@@ -1,4 +1,4 @@
-package js.email.javamail;
+package com.jslib.email;
 
 enum State
 {

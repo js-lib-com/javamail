@@ -1,4 +1,4 @@
-package js.email.javamail;
+package com.jslib.email;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -14,13 +14,13 @@ import javax.mail.Session;
 import org.junit.Before;
 import org.junit.Test;
 
-import js.dom.Document;
-import js.dom.Element;
-import js.email.Email;
-import js.email.EmailSender;
-import js.lang.Config;
-import js.util.Classes;
-import js.util.I18nPool;
+import com.jslib.api.dom.Document;
+import com.jslib.api.dom.Element;
+import com.jslib.api.email.Email;
+import com.jslib.api.email.EmailSender;
+import com.jslib.lang.Config;
+import com.jslib.util.Classes;
+import com.jslib.util.I18nPool;
 
 public class ProviderUnitTest
 {
@@ -35,7 +35,7 @@ public class ProviderUnitTest
     config.setProperty("js.repository.path", "fixture/emails");
     config.setProperty("js.files.pattern", "*.html");
     config.setProperty("js.domain.bounce", "gnotis.ro");
-    config.setProperty("js.template.engine", "js.template.xhtml.XhtmlTemplateEngine");
+    config.setProperty("js.template.engine", "com.jslib.template.xhtml.XhtmlTemplateEngine");
     config.setProperty("mail.transport.protocol", "smtp");
     config.setProperty("mail.smtp.host", "bbnet.ro");
     config.setProperty("mail.debug", "true");

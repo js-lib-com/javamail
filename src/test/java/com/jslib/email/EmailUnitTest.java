@@ -1,4 +1,4 @@
-package js.email.javamail;
+package com.jslib.email;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -18,14 +18,14 @@ import javax.mail.internet.InternetAddress;
 import org.junit.Before;
 import org.junit.Test;
 
-import js.email.Email;
-import js.lang.Config;
-import js.template.Template;
-import js.template.TemplateEngine;
-import js.util.Base64;
-import js.util.Classes;
-import js.util.Files;
-import js.util.Strings;
+import com.jslib.api.email.Email;
+import com.jslib.api.template.Template;
+import com.jslib.api.template.TemplateEngine;
+import com.jslib.lang.Config;
+import com.jslib.util.Base64;
+import com.jslib.util.Classes;
+import com.jslib.util.Files;
+import com.jslib.util.Strings;
 
 public class EmailUnitTest
 {
@@ -174,7 +174,7 @@ public class EmailUnitTest
     config.setProperty("js.dev.mode", "true");
     config.setProperty("js.repository.path", "fixture/emails");
     config.setProperty("js.files.pattern", "*.html");
-    config.setProperty("js.template.engine", "js.template.xhtml.XhtmlTemplateEngine");
+    config.setProperty("js.template.engine", "com.jslib.template.xhtml.XhtmlTemplateEngine");
     config.setProperty("mail.transport.protocol", "smtp");
     config.setProperty("mail.smtp.host", "bbnet.ro");
     config.setProperty("mail.debug", "true");

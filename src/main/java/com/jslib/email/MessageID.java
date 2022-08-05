@@ -1,10 +1,10 @@
-package js.email.javamail;
+package com.jslib.email;
 
 import java.io.Serializable;
 import java.util.UUID;
 
-import js.lang.SyntaxException;
-import js.util.Strings;
+import com.jslib.lang.SyntaxException;
+import com.jslib.util.Strings;
 
 /**
  * Immutable RFC2822 message identifier. This is a unique message identifier that refers to a particular version of a

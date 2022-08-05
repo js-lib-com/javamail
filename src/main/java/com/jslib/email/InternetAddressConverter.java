@@ -1,12 +1,12 @@
-package js.email.javamail;
+package com.jslib.email;
 
 import java.io.UnsupportedEncodingException;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import js.converter.Converter;
-import js.converter.ConverterException;
+import com.jslib.converter.Converter;
+import com.jslib.converter.ConverterException;
 
 /**
  * Email address string converter.

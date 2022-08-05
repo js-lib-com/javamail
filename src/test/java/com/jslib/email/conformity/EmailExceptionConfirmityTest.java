@@ -1,4 +1,4 @@
-package js.email.conformity;
+package com.jslib.email.conformity;
 
 import org.junit.Ignore;
 
