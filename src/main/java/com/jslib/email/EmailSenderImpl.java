@@ -147,10 +147,10 @@ public final class EmailSenderImpl implements EmailSender
         final File file = i18nFile.getFile();
         String templateName = Files.basename(file);
         if(templatesPool.put(templateName, file, i18nFile.getLocale())) {
-          log.warn("Override email template |%s:%s|", templateName, file);
+          log.warn("Override email template |{template_name}:{file_path}|", templateName, file);
         }
         else {
-          log.debug("Register email template |%s:%s|.", templateName, file);
+          log.debug("Register email template |{template_name}:{file_path}|.", templateName, file);
         }
       }
     }
@@ -204,7 +204,7 @@ public final class EmailSenderImpl implements EmailSender
       throw new EmailException("Fail to load template |%s|.", templateFile);
     }
 
-    log.debug("Create email from template |%s|.", template.getName());
+    log.debug("Create email from template |{template_name}|.", template.getName());
     return new EmailImpl(this, template);
   }
 

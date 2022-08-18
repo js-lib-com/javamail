@@ -74,17 +74,17 @@ final class SessionFactory
   public synchronized void config(final Config config)
   {
     if(!config.hasProperty(PROP_TRASNPORT_PROTOCOL)) {
-      log.debug("Email property |%s| is missing. Force to |smtp|.", PROP_TRASNPORT_PROTOCOL);
+      log.debug("Email property |{email_property}| is missing. Force to |smtp|.", PROP_TRASNPORT_PROTOCOL);
       config.setProperty(PROP_TRASNPORT_PROTOCOL, "smtp");
     }
 
     if(!config.hasProperty(PROP_SMTP_HOST)) {
-      log.debug("Email property |%s| is missing. Force to |localhost|.", PROP_SMTP_HOST);
+      log.debug("Email property |{email_property}| is missing. Force to |localhost|.", PROP_SMTP_HOST);
       config.setProperty(PROP_SMTP_HOST, "localhost");
     }
 
     if(!config.hasProperty(PROP_MAIL_DEBUG)) {
-      log.debug("Email property |%s| is missing. Force to |false|.", PROP_MAIL_DEBUG);
+      log.debug("Email property |{email_property}| is missing. Force to |false|.", PROP_MAIL_DEBUG);
       config.setProperty(PROP_MAIL_DEBUG, false);
     }
 
@@ -106,7 +106,7 @@ final class SessionFactory
       if(fromAddress != null) {
         try {
           this.fromAddress = InternetAddress.parse(fromAddress)[0];
-          log.debug("Initialize <from> address to |%s| from |%s| property.", fromAddress, PROP_SMTP_FROM);
+          log.debug("Initialize <from> address to |{email_from}| from |{email_property}| property.", fromAddress, PROP_SMTP_FROM);
         }
         catch(AddressException e) {
           throw new EmailException(e);
@@ -118,7 +118,7 @@ final class SessionFactory
       return;
     }
 
-    log.debug("Create JavaMail session:%s", dump(config.getProperties()));
+    log.debug("Create JavaMail session:{dump}", dump(config.getProperties()));
 
     final String user = config.getProperty(PROP_EMAIL_USER);
     if(user == null) {
